@@ -1,0 +1,49 @@
+{
+  "version": 1772802030881,
+  "assets": [
+    {
+      "url": "/build/manifest.json",
+      "revision": 1772802030885
+    },
+    {
+      "url": "/build/assets\\app-CACh5-cS.css",
+      "revision": 1772802030885
+    },
+    {
+      "url": "/build/assets\\app-CBDO0eV1.js",
+      "revision": 1772802030885
+    },
+    {
+      "url": "/build/assets\\app-CBDO0eV1.js.map",
+      "revision": 1772802030885
+    },
+    {
+      "url": "/build/assets\\app-Cn7s2_ts.css",
+      "revision": 1772802030885
+    },
+    {
+      "url": "/build/assets\\fa-brands-400-BP5tdqmh.woff2",
+      "revision": 1772802030886
+    },
+    {
+      "url": "/build/assets\\fa-regular-400-nyy7hhHF.woff2",
+      "revision": 1772802030886
+    },
+    {
+      "url": "/build/assets\\fa-solid-900-DRAAbZTg.woff2",
+      "revision": 1772802030886
+    },
+    {
+      "url": "/build/assets\\fa-v4compatibility-DD84SGiu.woff2",
+      "revision": 1772802030886
+    },
+    {
+      "url": "/build/assets\\vendor-BQa4MRMe.js",
+      "revision": 1772802030886
+    },
+    {
+      "url": "/build/assets\\vendor-BQa4MRMe.js.map",
+      "revision": 1772802030886
+    }
+  ]
+}

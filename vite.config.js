@@ -21,10 +21,22 @@ export default defineConfig({
                 },
             },
         },
+        cssCodeSplit: true,
+        sourcemap: true,
+        minify: 'esbuild',
+    },
+    optimizeDeps: {
+        include: ['alpinejs', 'lodash'],
     },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
+        hmr: {
+            overlay: false,
+        },
+    },
+    define: {
+        __VUE_OPTIONS__: JSON.stringify({ devtools: true }),
     },
 });

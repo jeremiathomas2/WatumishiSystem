@@ -1,143 +1,268 @@
-// Offline Resource Manager
+// Advanced Offline Manager for Watumishi HR System
 class OfflineManager {
     constructor() {
-        this.cacheName = 'watumishi-hr-v1';
+        this.cacheName = 'watumishi-hr-v2';
+        this.isOnline = navigator.onLine;
+        this.syncQueue = [];
         this.cachedResources = new Set();
         this.init();
     }
 
     init() {
-        // Register service worker if available
-        if ('serviceWorker' in navigator) {
-            this.registerServiceWorker();
-        }
-
-        // Cache critical resources
-        this.cacheCriticalResources();
-
-        // Setup online/offline event listeners
-        this.setupConnectivityListeners();
+        // Listen for online/offline events
+        window.addEventListener('online', () => this.handleOnline());
+        window.addEventListener('offline', () => this.handleOffline());
+        
+        // Register service worker
+        this.registerServiceWorker();
+        
+        // Load queued actions
+        this.loadSyncQueue();
+        
+        // Show offline status
+        this.updateOfflineStatus();
+        
+        // Check for updates
+        this.checkForUpdates();
     }
 
     async registerServiceWorker() {
-        try {
-            const registration = await navigator.serviceWorker.register('/sw.js');
-            console.log('Service Worker registered:', registration);
-        } catch (error) {
-            console.log('Service Worker registration failed:', error);
-        }
-    }
-
-    async cacheCriticalResources() {
-        const criticalResources = [
-            '/',
-            '/dashboard',
-            '/login',
-            '/css/app.css',
-            '/js/app.js',
-            '/js/vendor.js'
-        ];
-
-        try {
-            const cache = await caches.open(this.cacheName);
-            await cache.addAll(criticalResources);
-            console.log('Critical resources cached successfully');
-        } catch (error) {
-            console.error('Failed to cache critical resources:', error);
-        }
-    }
-
-    setupConnectivityListeners() {
-        window.addEventListener('online', () => {
-            this.showNotification('You are back online!', 'success');
-            this.syncPendingData();
-        });
-
-        window.addEventListener('offline', () => {
-            this.showNotification('You are offline. Some features may be limited.', 'warning');
-        });
-    }
-
-    async syncPendingData() {
-        // Sync any pending data when back online
-        const pendingData = localStorage.getItem('pendingData');
-        if (pendingData) {
+        if ('serviceWorker' in navigator) {
             try {
-                const data = JSON.parse(pendingData);
-                for (const item of data) {
-                    await this.sendPendingRequest(item);
-                }
-                localStorage.removeItem('pendingData');
-                this.showNotification('All pending data synced successfully', 'success');
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('Service Worker registered:', registration);
+                
+                // Listen for messages from service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    this.handleServiceWorkerMessage(event);
+                });
+                
+                return registration;
             } catch (error) {
-                console.error('Failed to sync pending data:', error);
+                console.error('Service Worker registration failed:', error);
             }
         }
     }
 
-    async sendPendingRequest(requestData) {
-        try {
-            const response = await fetch(requestData.url, {
-                method: requestData.method,
-                headers: requestData.headers,
-                body: requestData.body
-            });
-            return response;
-        } catch (error) {
-            console.error('Failed to send pending request:', error);
+    handleOnline() {
+        this.isOnline = true;
+        this.updateOfflineStatus();
+        this.processSyncQueue();
+        this.showNotification('Back online! Syncing your data...', 'success');
+    }
+
+    handleOffline() {
+        this.isOnline = false;
+        this.updateOfflineStatus();
+        this.showNotification('You are now offline. Some features may be limited.', 'warning');
+    }
+
+    updateOfflineStatus() {
+        const statusElement = document.getElementById('offline-status');
+        if (statusElement) {
+            statusElement.textContent = this.isOnline ? 'Online' : 'Offline';
+            statusElement.className = this.isOnline ? 'text-green-400' : 'text-red-400';
         }
     }
 
-    queueRequestForSync(requestData) {
-        const pendingData = localStorage.getItem('pendingData') || '[]';
-        const data = JSON.parse(pendingData);
-        data.push(requestData);
-        localStorage.setItem('pendingData', JSON.stringify(data));
+    // Queue actions for when offline
+    queueAction(type, data) {
+        const action = {
+            id: Date.now(),
+            type,
+            data,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.syncQueue.push(action);
+        this.saveSyncQueue();
+        
+        if (!this.isOnline) {
+            this.showNotification('Action queued for when you\'re back online', 'info');
+        }
     }
 
-    isOnline() {
-        return navigator.onLine;
+    // Process queued actions when online
+    async processSyncQueue() {
+        if (this.syncQueue.length === 0) return;
+        
+        const actions = [...this.syncQueue];
+        this.syncQueue = [];
+        this.saveSyncQueue();
+        
+        for (const action of actions) {
+            try {
+                await this.processAction(action);
+            } catch (error) {
+                console.error('Failed to process action:', action, error);
+                // Re-queue failed actions
+                this.syncQueue.push(action);
+            }
+        }
+    }
+
+    async processAction(action) {
+        const { type, data } = action;
+        
+        switch (type) {
+            case 'attendance':
+                return this.syncAttendance(data);
+            case 'payroll':
+                return this.syncPayroll(data);
+            case 'employee':
+                return this.syncEmployee(data);
+            case 'performance':
+                return this.syncPerformance(data);
+            default:
+                console.warn('Unknown action type:', type);
+        }
+    }
+
+    async syncAttendance(data) {
+        const response = await fetch('/attendance/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error('Sync failed');
+        return response.json();
+    }
+
+    async syncPayroll(data) {
+        const response = await fetch('/payroll/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error('Sync failed');
+        return response.json();
+    }
+
+    async syncEmployee(data) {
+        const response = await fetch('/employees/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error('Sync failed');
+        return response.json();
+    }
+
+    async syncPerformance(data) {
+        const response = await fetch('/performance/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) throw new Error('Sync failed');
+        return response.json();
+    }
+
+    saveSyncQueue() {
+        localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
+    }
+
+    loadSyncQueue() {
+        const saved = localStorage.getItem('syncQueue');
+        if (saved) {
+            this.syncQueue = JSON.parse(saved);
+        }
+    }
+
+    handleServiceWorkerMessage(event) {
+        const { type, data } = event.data;
+        
+        switch (type) {
+            case 'CACHE_UPDATED':
+                this.showNotification('Content updated', 'info');
+                break;
+            case 'SYNC_COMPLETED':
+                this.showNotification('Sync completed successfully', 'success');
+                break;
+            case 'SYNC_FAILED':
+                this.showNotification('Sync failed, will retry later', 'error');
+                break;
+        }
     }
 
     showNotification(message, type = 'info') {
-        if (window.showNotification) {
-            window.showNotification(message, type);
+        // Use existing notification system if available
+        if (typeof showNotification === 'function') {
+            showNotification(message, type);
         } else {
-            console.log(`[${type.toUpperCase()}] ${message}`);
+            // Fallback notification
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                z-index: 9999;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
     }
 
-    // Method to prefetch resources for offline use
-    async prefetchResources(resources) {
-        if (!this.isOnline()) return;
-
-        try {
-            const cache = await caches.open(this.cacheName);
-            const promises = resources.map(resource => 
-                cache.add(resource).catch(error => 
-                    console.warn(`Failed to cache ${resource}:`, error)
-                )
-            );
-            await Promise.all(promises);
-            console.log('Resources prefetched successfully');
-        } catch (error) {
-            console.error('Failed to prefetch resources:', error);
-        }
-    }
-
-    // Method to clear cache
-    async clearCache() {
-        try {
-            await caches.delete(this.cacheName);
-            console.log('Cache cleared successfully');
-        } catch (error) {
-            console.error('Failed to clear cache:', error);
+    // Check for updates
+    async checkForUpdates() {
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        this.showNotification('New version available! Refresh to update.', 'info');
+                    }
+                });
+            });
         }
     }
 }
 
-// Initialize offline manager
-window.offlineManager = new OfflineManager();
+// Initialize offline manager when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.offlineManager = new OfflineManager();
+});
 
-// Export for use in other modules
-export default OfflineManager;
+// Export for global access
+window.OfflineManager = OfflineManager;

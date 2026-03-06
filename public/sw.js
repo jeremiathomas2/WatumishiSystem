@@ -1,20 +1,26 @@
 // Service Worker for Watumishi HR System
-const CACHE_NAME = 'watumishi-hr-v1';
-const STATIC_CACHE = 'watumishi-static-v1';
-const DYNAMIC_CACHE = 'watumishi-dynamic-v1';
+const CACHE_NAME = 'watumishi-hr-v2';
+const STATIC_CACHE = 'watumishi-static-v2';
+const DYNAMIC_CACHE = 'watumishi-dynamic-v2';
 
 // Files to cache for offline functionality
 const STATIC_FILES = [
     '/',
     '/login',
     '/dashboard',
-    '/build/assets/app-Dht79Kxc.css',
-    '/build/assets/app-CACh5-cS.css',
-    '/build/assets/app-COlSPIbm.js',
+    '/employees',
+    '/attendance',
+    '/payroll',
+    '/performance',
+    '/reports',
+    '/build/assets/app-D-D1AOmr.js',
     '/build/assets/vendor-BQa4MRMe.js',
-    '/build/assets/fa-solid-900-DRAAbZTg.woff2',
+    '/build/assets/app-C4IfW9Cw.css',
+    '/build/assets/app-CACh5-cS.css',
+    '/build/assets/fa-solid-900-DRAbZTg.woff2',
     '/build/assets/fa-regular-400-nyy7hhHF.woff2',
-    '/build/assets/fa-brands-400-BP5tdqmh.woff2'
+    '/build/assets/fa-brands-400-BP5tdqmh.woff2',
+    '/build/assets/fa-v4compatibility-DD84SGiu.woff2'
 ];
 
 // Install event - cache static files
