@@ -1,0 +1,25 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "watch": "vite build --watch"
+    },
+    "devDependencies": {
+        "@fortawesome/fontawesome-free": "^7.2.0",
+        "alpinejs": "^3.15.8",
+        "autoprefixer": "^10.4.27",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^2.0.0",
+        "lodash": "^4.17.23",
+        "postcss": "^8.5.8",
+        "tailwindcss": "^3.4.19",
+        "vite": "^7.0.7"
+    },
+    "dependencies": {
+        "chart.js": "^4.5.1"
+    }
+}
