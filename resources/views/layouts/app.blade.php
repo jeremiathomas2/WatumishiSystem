@@ -476,7 +476,20 @@
         }
         
         .notification-dropdown.fade-in {
-            animation: fadeIn 0.2s ease-out;
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Notification container hover functionality */
+        .notification-container:hover .notification-dropdown {
+            display: block !important;
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+        
+        .notification-container:hover .notification-dropdown.hidden {
+            display: block !important;
         }
         
         .notification-dropdown .text-white {
@@ -706,7 +719,7 @@
                     
                     <div class="flex items-center space-x-6">
                         <!-- Notifications -->
-                        <div class="relative">
+                        <div class="relative notification-container">
                             <button onclick="toggleNotificationDropdown()" class="relative text-gray-300 hover:text-white transition-all hover:scale-110 p-2">
                                 <i class="fas fa-bell text-xl"></i>
                                 <span id="notification-badge" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
